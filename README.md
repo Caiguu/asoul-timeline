@@ -2,7 +2,7 @@
 
 > 一个为 A-SOUL 粉丝打造的动态聚合与直播日历站点。聚合嘉然、贝拉、乃琳与官方账号的动态，AI 自动识别每周日程表，直播安排自动进日历、可订阅到手机。
 
-**线上地址**：[asoul-timeline.pages.dev](https://asoul-timeline.pages.dev)
+**线上地址**：[timeline.asoul.love](https://timeline.asoul.love)
 
 ## 功能总览
 
