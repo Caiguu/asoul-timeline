@@ -1,0 +1,8 @@
+{
+  "name": "asoul-timeline-api",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-07-15",
+  "vars": {
+    "TURSO_DB_URL": "libsql://asoul-timeline-caiguu.aws-us-west-2.turso.io"
+  }
+}

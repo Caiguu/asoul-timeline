@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+bun.lockb
+
+# Build outputs
+dist/
+.astro/
+.wrangler/
+.dev.vars
+*.tsbuildinfo
+
+# Data
+data/
+*.sqlite
+*.sqlite3
+*.db
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+Thumbs.db
+logs/

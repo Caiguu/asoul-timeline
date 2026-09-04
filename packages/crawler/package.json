@@ -1,0 +1,20 @@
+{
+  "name": "@asoul-timeline/crawler",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun --env-file=../../.env run src/index.ts",
+    "dry": "bun --env-file=../../.env run src/index.ts --dry",
+    "daemon": "bun --env-file=../../.env run src/daemon.ts",
+    "sync:remote": "bun --env-file=../../.env run src/sync-remote.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@asoul-timeline/db": "workspace:*",
+    "@asoul-timeline/shared": "workspace:*",
+    "@libsql/client": "^0.17.4",
+    "drizzle-orm": "^0.36.0",
+    "playwright": "^1.61.1"
+  }
+}

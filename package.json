@@ -1,0 +1,26 @@
+{
+  "name": "asoul-timeline",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "cd apps/api && bun run dev",
+    "dev:web": "cd apps/web && bun run dev",
+    "crawl": "cd packages/crawler && bun run start",
+    "crawl:dry": "cd packages/crawler && bun run dry",
+    "sync:remote": "cd packages/crawler && bun run sync:remote",
+    "build:web": "cd apps/web && bun run build",
+    "typecheck": "bun run typecheck:all",
+    "typecheck:all": "cd packages/shared && bun run typecheck && cd ../db && bun run typecheck && cd ../crawler && bun run typecheck && cd ../../apps/api && bun run typecheck",
+    "db:generate": "cd packages/db && bun run generate",
+    "db:push": "cd packages/db && bun run push"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/bun": "^1.1.0"
+  }
+}

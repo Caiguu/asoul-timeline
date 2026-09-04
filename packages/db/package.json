@@ -1,0 +1,24 @@
+{
+  "name": "@asoul-timeline/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./local": "./src/local.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "drizzle-kit generate",
+    "push": "bun src/push.ts"
+  },
+  "dependencies": {
+    "@asoul-timeline/shared": "workspace:*",
+    "@libsql/client": "^0.17.4",
+    "drizzle-orm": "^0.36.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30.0"
+  }
+}

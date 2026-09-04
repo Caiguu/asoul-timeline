@@ -1,0 +1,102 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+<Layout title="关于 - A-SOUL Timeline">
+  <h1>关于本站</h1>
+
+  <section class="about-section">
+    <h2>这是什么？</h2>
+    <p>
+      A-SOUL Timeline 是一个专为 A-SOUL 粉丝打造的动态聚合与直播日历工具。
+      聚合嘉然、贝拉、乃琳以及官方账号的最新动态，通过 AI 智能识别直播预约和每周日程表，帮你不再错过任何一场直播。
+    </p>
+  </section>
+
+  <section class="about-section">
+    <h2>主要功能</h2>
+    <ul class="about-list">
+      <li>
+        <strong>动态时间线</strong>
+        <p>按时间倒序展示四位成员的 B 站动态。支持视频封面、图文图片、转发原文展示，表情包自动渲染为图片。点击动态卡片即可跳转 B 站原文。</p>
+      </li>
+      <li>
+        <strong>AI 直播识别</strong>
+        <p>调用豆包 Seed1.8 多模态模型，自动识别官方每周日程表图片中的直播安排，提取直播标题、时间、参与成员和直播间信息。</p>
+      </li>
+      <li>
+        <strong>正在直播</strong>
+        <p>实时展示嘉然、贝拉、乃琳三人的直播状态。应援色高亮标识正在直播的成员，显示直播标题和观看人数，点击卡片即可进入对应直播间。</p>
+      </li>
+      <li>
+        <strong>直播日历</strong>
+        <p>月视图展示所有直播日程，每天下方用不同应援色圆点标注该日直播。点击日期查看当日直播列表，点击条目直接进入对应直播间。</p>
+      </li>
+      <li>
+        <strong>日历订阅</strong>
+        <p>一键下载 ICS 日历文件，导入苹果日历、Google 日历等，直播时间自动同步到你的手机或电脑。</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="about-section">
+    <h2>技术说明</h2>
+    <ul class="about-list">
+      <li>前端：Astro + SolidJS，部署在 Cloudflare Pages</li>
+      <li>API：Hono，部署在 Cloudflare Workers</li>
+      <li>数据库：Turso（Edge SQLite）</li>
+      <li>AI 模型：豆包 Seed1.8（多模态识图）+ DeepSeek（文本分类）</li>
+    </ul>
+  </section>
+
+  <section class="about-section">
+    <h2>更新频率</h2>
+    <p>
+      自动跟进四位成员最近一周的动态，并 AI 识别其中的直播安排。数据同步到云端后，前端实时展示。
+    </p>
+  </section>
+
+  <section class="about-section">
+    <h2>鸣谢</h2>
+    <p>
+      感谢<a href="https://asoul.love" target="_blank">枝江站（asoul.love）</a>在本站建设中提供的建议和支持。
+    </p>
+  </section>
+</Layout>
+
+<style>
+  h1 { margin-bottom: 1.5rem; }
+  .about-section {
+    margin-bottom: 2rem;
+  }
+  .about-section h2 {
+    font-size: 1.1rem;
+    color: #ff6b9d;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 2px solid #ff6b9d22;
+  }
+  .about-section p {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #444;
+  }
+  .about-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .about-list li {
+    padding-left: 0;
+  }
+  .about-list strong {
+    color: #333;
+    font-size: 0.95rem;
+  }
+  .about-list p {
+    margin: 0.2rem 0 0 0;
+    font-size: 0.88rem;
+    color: #666;
+  }
+</style>

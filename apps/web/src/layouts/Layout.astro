@@ -1,0 +1,32 @@
+---
+interface Props {
+  title?: string;
+}
+const { title = "A-SOUL Timeline" } = Astro.props;
+---
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <nav class="nav">
+      <a href="/">时间线</a>
+      <a href="/calendar">日历</a>
+      <a href="/live">正在直播</a>
+      <a href="/about">关于</a>
+    </nav>
+    <main class="main">
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style>
+  .nav { display: flex; gap: 1rem; padding: 1rem 2rem; border-bottom: 1px solid #eee; }
+  .nav a { text-decoration: none; color: #555; }
+  .nav a:hover { color: #ff6b9d; }
+  .main { max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem; }
+</style>

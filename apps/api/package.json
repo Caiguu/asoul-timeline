@@ -1,0 +1,23 @@
+{
+  "name": "@asoul-timeline/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@asoul-timeline/db": "workspace:*",
+    "@asoul-timeline/shared": "workspace:*",
+    "@libsql/client": "^0.17.4",
+    "drizzle-orm": "^0.36.0",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0",
+    "@cloudflare/workers-types": "^4.20241201.0"
+  }
+}
