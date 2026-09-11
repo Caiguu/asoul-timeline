@@ -1,0 +1,21 @@
+# HTML 页面禁止缓存（SSR 文案含构建时日期，必须每次回源拿最新）
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+/calendar
+  Cache-Control: no-cache, no-store, must-revalidate
+/calendar/*
+  Cache-Control: no-cache, no-store, must-revalidate
+/live
+  Cache-Control: no-cache, no-store, must-revalidate
+/live/*
+  Cache-Control: no-cache, no-store, must-revalidate
+/about
+  Cache-Control: no-cache, no-store, must-revalidate
+/about/*
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# 带内容哈希的静态资源可永久缓存
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable

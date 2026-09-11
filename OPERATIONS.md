@@ -93,10 +93,12 @@ cd ~/Desktop/asoul_timeline/packages/crawler && bun --env-file=../../.env run sr
 
 ```bash
 # 部署前端（改了 web/ 代码后）
+# 注意：--branch main 让部署进入生产环境（项目 production branch 是 main，
+# 不加此参数且本地 git 分支为 master 时会变成 Preview 部署，线上不更新！）
 cd ~/Desktop/asoul_timeline/apps/web
 rm -rf dist && PUBLIC_API_BASE="" bun run build
 export https_proxy=http://127.0.0.1:7897 http_proxy=http://127.0.0.1:7897 all_proxy=socks5://127.0.0.1:7897
-wrangler pages deploy dist/ --project-name asoul-timeline
+wrangler pages deploy dist/ --project-name asoul-timeline --branch main --commit-dirty=true
 
 # 部署 API（改了 api/ 代码后）
 export https_proxy=http://127.0.0.1:7897 http_proxy=http://127.0.0.1:7897 all_proxy=socks5://127.0.0.1:7897
