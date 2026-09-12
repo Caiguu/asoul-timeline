@@ -1,5 +1,5 @@
 import { createSignal, onMount, For, Show } from "solid-js";
-import type { Dynamic, RichTextNode, ScheduleParticipant, ReserveInfo, ScheduleEntryInfo } from "@asoul-timeline/shared";
+import type { Dynamic, RichTextNode, ScheduleParticipant, ReserveInfo, ScheduleEntryInfo, TopicInfo } from "@asoul-timeline/shared";
 import { apiUrl } from "../api";
 
 function fmtTime(ts: number): string {
@@ -199,6 +199,22 @@ export default function Timeline() {
                       )}
                     </For>
                   </div>
+                </Show>
+
+                <Show when={item.topic}>
+                  {(tp: TopicInfo) => (
+                    <div class="topic-bar">
+                      <a
+                        href={tp().jumpUrl ?? "#"}
+                        target="_blank"
+                        class="topic-tag"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span class="topic-hash">#</span>
+                        {tp().name}
+                      </a>
+                    </div>
+                  )}
                 </Show>
 
                 <Show when={item.text || item.richText.length > 0}>

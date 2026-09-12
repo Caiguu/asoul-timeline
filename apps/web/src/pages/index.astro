@@ -94,6 +94,23 @@ import Timeline from "../components/Timeline.tsx";
   color: #333;
 }
 
+.topic-bar { margin: 0.4rem 0 0.2rem; }
+.topic-tag {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--theme-color, #ff6b9d) 10%, #fff);
+  border: 1px solid color-mix(in srgb, var(--theme-color, #ff6b9d) 30%, transparent);
+  color: var(--theme-color, #ff6b9d);
+  font-size: 12px; font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.topic-tag:hover {
+  background: color-mix(in srgb, var(--theme-color, #ff6b9d) 20%, #fff);
+}
+.topic-hash { opacity: 0.7; font-weight: 700; }
+
 /* 统一的"直播预告"卡片 = reserve + schedule entries */
 .live-preview-card {
   display: flex; align-items: stretch; gap: 0.5rem;

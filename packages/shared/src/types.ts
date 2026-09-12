@@ -35,6 +35,12 @@ export interface ForwardInfo {
   videoTitle: string | null;
 }
 
+export interface TopicInfo {
+  id: number;
+  name: string;
+  jumpUrl: string | null;
+}
+
 export interface Dynamic {
   id: string;
   uid: number;
@@ -44,6 +50,7 @@ export interface Dynamic {
   richText: RichTextNode[];
   raw: string;
   images: string[];
+  topic: TopicInfo | null;
   authorName: string;
   authorFace: string | null;
   authorUrl: string | null;

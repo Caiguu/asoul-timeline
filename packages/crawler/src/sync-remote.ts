@@ -51,12 +51,17 @@ console.log(`[sync-remote] 增量同步 (last=${lastSync ? new Date(lastSync).to
 // 创建表（幂等）
 for (const sql of [
   `CREATE TABLE IF NOT EXISTS accounts (uid INTEGER PRIMARY KEY, name TEXT NOT NULL, avatar TEXT, created_at INTEGER NOT NULL)`,
-  `CREATE TABLE IF NOT EXISTS dynamics (id TEXT PRIMARY KEY, uid INTEGER NOT NULL REFERENCES accounts(uid), type TEXT NOT NULL, bili_type TEXT NOT NULL, text TEXT NOT NULL, rich_text TEXT NOT NULL, raw TEXT NOT NULL, images TEXT NOT NULL, author_name TEXT NOT NULL, author_face TEXT, author_url TEXT, dynamic_url TEXT NOT NULL, video_cover TEXT, video_title TEXT, forward TEXT, reserve TEXT, schedule_entries TEXT, live_time INTEGER, live_title TEXT, created_at INTEGER NOT NULL, fetched_at INTEGER NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS dynamics (id TEXT PRIMARY KEY, uid INTEGER NOT NULL REFERENCES accounts(uid), type TEXT NOT NULL, bili_type TEXT NOT NULL, text TEXT NOT NULL, rich_text TEXT NOT NULL, raw TEXT NOT NULL, images TEXT NOT NULL, author_name TEXT NOT NULL, author_face TEXT, author_url TEXT, dynamic_url TEXT NOT NULL, video_cover TEXT, video_title TEXT, forward TEXT, reserve TEXT, topic TEXT, schedule_entries TEXT, live_time INTEGER, live_title TEXT, created_at INTEGER NOT NULL, fetched_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS live_schedules (id INTEGER PRIMARY KEY AUTOINCREMENT, dynamic_id TEXT NOT NULL REFERENCES dynamics(id), uid INTEGER NOT NULL, rid INTEGER NOT NULL UNIQUE, title TEXT NOT NULL, live_time INTEGER NOT NULL, status TEXT NOT NULL, created_at INTEGER NOT NULL, live_type TEXT, participants TEXT, live_room_url TEXT, source TEXT)`,
   `CREATE TABLE IF NOT EXISTS live_status (uid INTEGER PRIMARY KEY, name TEXT NOT NULL, live_status INTEGER DEFAULT 0, title TEXT DEFAULT '', online INTEGER DEFAULT 0, cover TEXT DEFAULT '', room_id INTEGER DEFAULT 0, updated_at INTEGER DEFAULT 0)`,
 ]) {
-  await execWithRetry(sql);
+  await execWithRetry({ sql });
 }
+// 幂等迁移：为已有表补充 topic 列（已存在则忽略报错）
+try {
+  await execWithRetry({ sql: "ALTER TABLE dynamics ADD COLUMN topic TEXT" });
+  console.log("[sync-remote] 已为远程 dynamics 表新增 topic 列");
+} catch {}
 
 let totalPushed = 0;
 
@@ -71,8 +76,8 @@ console.log(`[sync-remote] accounts: ${accounts.length} rows`);
 const dynamics = localDb.query("SELECT * FROM dynamics WHERE fetched_at > ?").all(lastSync);
 for (const r of dynamics as any[]) {
   await execWithRetry({
-    sql: "INSERT OR IGNORE INTO dynamics (id, uid, type, bili_type, text, rich_text, raw, images, author_name, author_face, author_url, dynamic_url, video_cover, video_title, forward, reserve, schedule_entries, live_time, live_title, created_at, fetched_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    args: [r.id, r.uid, r.type, r.bili_type, r.text, r.rich_text, r.raw, r.images, r.author_name, r.author_face, r.author_url, r.dynamic_url, r.video_cover, r.video_title, r.forward, r.reserve, r.schedule_entries, r.live_time, r.live_title, r.created_at, r.fetched_at],
+    sql: "INSERT OR IGNORE INTO dynamics (id, uid, type, bili_type, text, rich_text, raw, images, author_name, author_face, author_url, dynamic_url, video_cover, video_title, forward, reserve, topic, schedule_entries, live_time, live_title, created_at, fetched_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    args: [r.id, r.uid, r.type, r.bili_type, r.text, r.rich_text, r.raw, r.images, r.author_name, r.author_face, r.author_url, r.dynamic_url, r.video_cover, r.video_title, r.forward, r.reserve, r.topic, r.schedule_entries, r.live_time, r.live_title, r.created_at, r.fetched_at],
   });
 }
 totalPushed += dynamics.length;

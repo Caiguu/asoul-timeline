@@ -9,6 +9,7 @@ export type {
   LiveType,
   ScheduleParticipant,
   ScheduleEntryInfo,
+  TopicInfo,
   LiveSchedule,
   TimelineResponse,
   CalendarResponse,

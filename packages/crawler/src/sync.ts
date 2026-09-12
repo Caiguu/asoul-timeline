@@ -34,6 +34,7 @@ export async function saveDynamic(
       videoTitle: raw.videoTitle,
       forward: raw.forward,
       reserve: raw.reserve,
+      topic: raw.topic,
       scheduleEntries: raw.scheduleEntries,
       liveTime: result.liveTime,
       liveTitle: result.liveTitle,

@@ -1,5 +1,5 @@
 import { chromium, type Browser } from "playwright";
-import type { ForwardInfo, RichTextNode, ReserveInfo } from "@asoul-timeline/shared";
+import type { ForwardInfo, RichTextNode, ReserveInfo, TopicInfo } from "@asoul-timeline/shared";
 import type { RawDynamic } from "./types";
 
 const UA =
@@ -211,6 +211,12 @@ function parseDynamic(it: any): RawDynamic {
   const forward = it.type === "DYNAMIC_TYPE_FORWARD" ? parseForward(it) : null;
   const reserve = parseReserve(dyn?.additional);
 
+  // 话题标签（B站将话题放在 module_dynamic.topic，请求时动态生成）
+  const rawTopic = dyn?.topic;
+  const topic: TopicInfo | null = rawTopic?.name
+    ? { id: Number(rawTopic.id) || 0, name: rawTopic.name, jumpUrl: fixUrl(rawTopic.jump_url) }
+    : null;
+
   return {
     id: it.id_str,
     uid: author?.mid ?? 0,
@@ -227,6 +233,7 @@ function parseDynamic(it: any): RawDynamic {
     videoTitle,
     forward,
     reserve,
+    topic,
     scheduleEntries: null,
     createdAt: (author?.pub_ts ?? 0) * 1000,
   };

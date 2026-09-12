@@ -1,4 +1,4 @@
-import type { DynamicType, ForwardInfo, RichTextNode, ReserveInfo, ScheduleEntryInfo } from "@asoul-timeline/shared";
+import type { DynamicType, ForwardInfo, RichTextNode, ReserveInfo, ScheduleEntryInfo, TopicInfo } from "@asoul-timeline/shared";
 
 export interface RawDynamic {
   id: string;
@@ -16,6 +16,7 @@ export interface RawDynamic {
   videoTitle: string | null;
   forward: ForwardInfo | null;
   reserve: ReserveInfo | null;
+  topic: TopicInfo | null;
   scheduleEntries: ScheduleEntryInfo[] | null;
   createdAt: number;
 }

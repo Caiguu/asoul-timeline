@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import type { ForwardInfo } from "@asoul-timeline/shared";
+import type { ForwardInfo, TopicInfo } from "@asoul-timeline/shared";
 import type { RichTextNode } from "@asoul-timeline/shared";
 import type { ReserveInfo, LiveType, ScheduleParticipant } from "@asoul-timeline/shared";
 
@@ -41,6 +41,7 @@ export const dynamics = sqliteTable("dynamics", {
   videoTitle: text("video_title"),
   forward: text("forward", { mode: "json" }).$type<ForwardInfo | null>(),
   reserve: text("reserve", { mode: "json" }).$type<ReserveInfo | null>(),
+  topic: text("topic", { mode: "json" }).$type<TopicInfo | null>(),
   scheduleEntries: text("schedule_entries", { mode: "json" }).$type<ScheduleEntryInfo[] | null>(),
   liveTime: integer("live_time"),
   liveTitle: text("live_title"),
