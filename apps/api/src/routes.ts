@@ -1,7 +1,7 @@
 // 共享路由创建函数，兼容本地 bun:sqlite 和远程 libsql (Turso)
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { eq, desc, and, gte, lt } from "drizzle-orm";
+import { eq, desc, and, gte, gt, lt } from "drizzle-orm";
 import { accounts, dynamics, liveSchedules } from "@asoul-timeline/db";
 import { getLiveStatus } from "./live-status";
 
@@ -44,6 +44,43 @@ export function createApp(db: any) {
         : null;
 
     return c.json({ items, nextCursor });
+  });
+
+  // 轮询接口：返回 since 时间戳之后的动态（供 QQ/微信等机器人轮询使用）
+// 用法：GET /api/dynamics/recent?since=<毫秒时间戳>&limit=20
+//   首次调用不带 since → 返回最新动态并记住返回的 latest 时间戳
+//   之后每次带上一次响应中的 latest 作为 since → 只拿到增量
+//   可选 uid=<uid> 只看某个成员；type=live_reserve 只看直播预约
+app.get("/api/dynamics/recent", async (c) => {
+    const since = Number(c.req.query("since") ?? 0);
+    const uid = Number(c.req.query("uid") ?? 0);
+    const type = c.req.query("type") ?? "";
+    const limit = Math.min(Number(c.req.query("limit") ?? 20), 50);
+
+    const conds: any[] = [];
+    if (since > 0) conds.push(gt(dynamics.createdAt, since));
+    if (uid) conds.push(eq(dynamics.uid, uid));
+    if (type && ["normal", "live_reserve", "live_notice"].includes(type)) {
+      conds.push(eq(dynamics.type, type as any));
+    }
+
+    const rows = await db
+      .select()
+      .from(dynamics)
+      .where(conds.length ? and(...conds) : undefined)
+      .orderBy(desc(dynamics.createdAt))
+      .limit(limit)
+      .all();
+
+    const items = (rows as any[]).map(({ raw, ...rest }: any) => rest);
+    const latest = items.length > 0 ? items[0].createdAt : since > 0 ? since : Date.now();
+
+    return c.json({
+      items,
+      latest,            // 把它存下来，下次作为 since 传回来即可
+      count: items.length,
+      hasMore: rows.length === limit,
+    });
   });
 
   const scheduleFields = {

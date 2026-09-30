@@ -288,7 +288,17 @@ export default function CalendarMonth() {
                   "cal-cell-today": isToday,
                 }}
                 data-selected={selectedDate() && cell.date.toDateString() === selectedDate()?.toDateString() || undefined}
-                onClick={() => setSelectedDate(cell.date)}
+                onClick={() => {
+                  if (!cell.inMonth) {
+                    // 点击非本月日期：跳转到对应月份、加载该月数据并选中当天
+                    setViewYear(cell.date.getFullYear());
+                    setViewMonth(cell.date.getMonth());
+                    setSelectedDate(cell.date);
+                    loadMonth();
+                  } else {
+                    setSelectedDate(cell.date);
+                  }
+                }}
               >
                 <span class="cal-date">{cell.date.getDate()}</span>
                 <Show when={cell.schedules.length > 0}>

@@ -45,7 +45,7 @@ export async function ocrScheduleImage(
 
 只返回纯JSON数组，不要markdown代码块，不要其他文字。`;
 
-  const res = await fetch(`${DOUBAO_BASE_URL}/responses`, {
+  const res = await fetch(`${DOUBAO_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${DOUBAO_API_KEY}`,
@@ -53,12 +53,12 @@ export async function ocrScheduleImage(
     },
     body: JSON.stringify({
       model: DOUBAO_MODEL,
-      input: [
+      messages: [
         {
           role: "user",
           content: [
-            { type: "input_image", image_url: imageUrl },
-            { type: "input_text", text: prompt },
+            { type: "image_url", image_url: { url: imageUrl } },
+            { type: "text", text: prompt },
           ],
         },
       ],
@@ -72,15 +72,8 @@ export async function ocrScheduleImage(
 
   const data = await res.json();
 
-  // 找 message 类型的 output
-  let text = "";
-  for (const o of data.output ?? []) {
-    if (o.type === "message" && o.content) {
-      for (const c of o.content) {
-        if (c.type === "output_text") text = c.text;
-      }
-    }
-  }
+  // chat/completions 格式：choices[0].message.content 为文本
+  const text: string = data.choices?.[0]?.message?.content ?? "";
 
   // 清理可能的 markdown 包裹
   const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
