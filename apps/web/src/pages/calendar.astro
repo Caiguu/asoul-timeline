@@ -25,7 +25,11 @@ import CalendarMonth from "../components/CalendarMonth.tsx";
 
 .cal { display: flex; flex-direction: column; gap: 0.8rem; }
 
-/* 月份导航 */
+/* 月份导航（选择器浮动锚点） */
+.cal-nav-wrap {
+  position: relative;
+  display: flex; justify-content: center;
+}
 .cal-nav {
   display: flex; align-items: center; justify-content: center; gap: 1.5rem;
 }
@@ -43,10 +47,18 @@ import CalendarMonth from "../components/CalendarMonth.tsx";
 .cal-nav-title:hover { background: #f5f5f5; }
 .cal-nav-arrow { font-size: 10px; color: #999; margin-left: 4px; }
 
-/* 月份选择器 */
+/* 浮动月份/年代选择器（popover，不挤压下方内容） */
 .cal-picker {
-  background: #fff; border: 1px solid #eee; border-radius: 12px;
-  padding: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  position: absolute; top: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%); z-index: 30;
+  width: 280px; background: #fff;
+  border: 1px solid #eee; border-radius: 12px;
+  padding: 1rem; box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  animation: cal-picker-pop 0.15s ease;
+}
+@keyframes cal-picker-pop {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 .cal-picker-years {
   display: flex; align-items: center; justify-content: center; gap: 1rem;
@@ -57,9 +69,13 @@ import CalendarMonth from "../components/CalendarMonth.tsx";
   cursor: pointer; padding: 2px 10px; color: #666;
 }
 .cal-picker-years button:hover { border-color: #ff6b9d; color: #ff6b9d; }
+.cal-picker-label { cursor: pointer; user-select: none; padding: 2px 6px; border-radius: 4px; transition: background 0.15s; }
+.cal-picker-label:hover { background: #f5f5f5; }
+.cal-picker-label::after { content: " ▾"; font-size: 10px; color: #999; font-weight: 400; }
 .cal-picker-months {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 0.8rem;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
 }
+.cal-picker-decades { grid-template-columns: repeat(5, 1fr); }
 .cal-pm {
   padding: 8px 0; border: 1px solid #eee; border-radius: 6px;
   background: #fff; cursor: pointer; font-size: 13px; color: #666;
@@ -68,11 +84,6 @@ import CalendarMonth from "../components/CalendarMonth.tsx";
 .cal-pm:hover { border-color: #ff6b9d; }
 .cal-pm-active { background: #ff6b9d; color: #fff; border-color: #ff6b9d; }
 .cal-pm-current { border-color: #ffb3cc; }
-.cal-picker-ok {
-  width: 100%; padding: 8px; border: none; border-radius: 6px;
-  background: #ff6b9d; color: #fff; cursor: pointer; font-size: 14px; font-weight: 600;
-}
-.cal-picker-ok:hover { background: #ff5588; }
 
 /* 月视图网格 */
 .cal-grid {

@@ -1,4 +1,4 @@
-import { createSignal, onMount, createMemo, For, Show } from "solid-js";
+import { createSignal, createEffect, onCleanup, onMount, createMemo, For, Show } from "solid-js";
 import type { LiveSchedule, ScheduleParticipant } from "@asoul-timeline/shared";
 import { apiUrl } from "../api";
 
@@ -151,6 +151,7 @@ export default function CalendarMonth() {
   const [showPicker, setShowPicker] = createSignal(false);
   const [pickerYear, setPickerYear] = createSignal(now.getFullYear());
   const [pickerMonth, setPickerMonth] = createSignal(now.getMonth());
+  const [pickerMode, setPickerMode] = createSignal<"month" | "decade">("month");
 
   async function loadMonth() {
     setLoading(true);
@@ -211,13 +212,41 @@ export default function CalendarMonth() {
     setSelectedDate(null);
     loadMonth();
   }
-  function pickMonth() {
+  function pickMonth(m: number) {
     setViewYear(pickerYear());
-    setViewMonth(pickerMonth());
+    setViewMonth(m);
     setSelectedDate(null);
     setShowPicker(false);
     loadMonth();
   }
+
+  // 年代视图的起点（如 2025 → 2020，显示 2020-2029）
+  const decadeStart = () => Math.floor(pickerYear() / 10) * 10;
+
+  // 打开选择器时同步到当前视图的年月
+  function togglePicker(e: MouseEvent) {
+    e.stopPropagation();
+    if (!showPicker()) {
+      setPickerYear(viewYear());
+      setPickerMonth(viewMonth());
+      setPickerMode("month");
+    }
+    setShowPicker(!showPicker());
+  }
+
+  // 点击选择器外部关闭
+  createEffect(() => {
+    if (showPicker()) {
+      const close = (e: MouseEvent) => {
+        const t = e.target as HTMLElement;
+        if (!t.closest(".cal-picker") && !t.closest(".cal-nav-title")) {
+          setShowPicker(false);
+        }
+      };
+      document.addEventListener("click", close);
+      onCleanup(() => document.removeEventListener("click", close));
+    }
+  });
 
   return (
     <div class="cal">
@@ -233,43 +262,66 @@ export default function CalendarMonth() {
         </button>
       </div>
 
-      {/* 月份导航 */}
-      <div class="cal-nav">
-        <button class="cal-nav-btn" onClick={prevMonth}>&lt;</button>
-        <div class="cal-nav-title" onClick={() => setShowPicker(!showPicker())}>
-          {fmtMonthLabel(viewYear(), viewMonth())}
-          <span class="cal-nav-arrow">{showPicker() ? "▲" : "▼"}</span>
+      {/* 月份导航（包含浮动选择器锚点） */}
+      <div class="cal-nav-wrap">
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onClick={prevMonth}>&lt;</button>
+          <div class="cal-nav-title" onClick={togglePicker}>
+            {fmtMonthLabel(viewYear(), viewMonth())}
+            <span class="cal-nav-arrow">{showPicker() ? "▲" : "▼"}</span>
+          </div>
+          <button class="cal-nav-btn" onClick={nextMonth}>&gt;</button>
         </div>
-        <button class="cal-nav-btn" onClick={nextMonth}>&gt;</button>
-      </div>
 
-      {/* 月份选择器 */}
-      <Show when={showPicker()}>
-        <div class="cal-picker">
-          <div class="cal-picker-years">
-            <button onClick={() => setPickerYear(pickerYear() - 1)}>&lt;</button>
-            <span>{pickerYear()}年</span>
-            <button onClick={() => setPickerYear(pickerYear() + 1)}>&gt;</button>
+        {/* 浮动月份/年代选择器 */}
+        <Show when={showPicker()}>
+          <div class="cal-picker">
+            <div class="cal-picker-years">
+              <button onClick={() => setPickerYear(pickerYear() - (pickerMode() === "decade" ? 10 : 1))}>&lt;</button>
+              <span class="cal-picker-label" onClick={() => setPickerMode(pickerMode() === "month" ? "decade" : "month")}>
+                {pickerMode() === "month" ? `${pickerYear()}年` : `${decadeStart()}年 - ${decadeStart() + 9}年`}
+              </span>
+              <button onClick={() => setPickerYear(pickerYear() + (pickerMode() === "decade" ? 10 : 1))}>&gt;</button>
+            </div>
+
+            {pickerMode() === "month" ? (
+              <div class="cal-picker-months">
+                <For each={Array.from({ length: 12 }, (_, i) => i)}>
+                  {(m) => (
+                    <button
+                      classList={{
+                        "cal-pm": true,
+                        "cal-pm-active": m === pickerMonth() && pickerYear() === viewYear(),
+                        "cal-pm-current": m === now.getMonth() && pickerYear() === now.getFullYear(),
+                      }}
+                      onClick={() => pickMonth(m)}
+                    >
+                      {m + 1}月
+                    </button>
+                  )}
+                </For>
+              </div>
+            ) : (
+              <div class="cal-picker-months cal-picker-decades">
+                <For each={Array.from({ length: 10 }, (_, i) => decadeStart() + i)}>
+                  {(y) => (
+                    <button
+                      classList={{
+                        "cal-pm": true,
+                        "cal-pm-active": y === viewYear(),
+                        "cal-pm-current": y === now.getFullYear(),
+                      }}
+                      onClick={() => { setPickerYear(y); setPickerMode("month"); }}
+                    >
+                      {y}
+                    </button>
+                  )}
+                </For>
+              </div>
+            )}
           </div>
-          <div class="cal-picker-months">
-            <For each={Array.from({ length: 12 }, (_, i) => i)}>
-              {(m) => (
-                <button
-                  classList={{
-                    "cal-pm": true,
-                    "cal-pm-active": m === pickerMonth() && pickerYear() === viewYear(),
-                    "cal-pm-current": m === now.getMonth() && pickerYear() === now.getFullYear(),
-                  }}
-                  onClick={() => setPickerMonth(m)}
-                >
-                  {m + 1}月
-                </button>
-              )}
-            </For>
-          </div>
-          <button class="cal-picker-ok" onClick={pickMonth}>确定</button>
-        </div>
-      </Show>
+        </Show>
+      </div>
 
       {/* 月视图 */}
       <div class="cal-grid" classList={{ "cal-loading": loading() }}>
