@@ -3,7 +3,8 @@ import Layout from "../layouts/Layout.astro";
 import CalendarMonth from "../components/CalendarMonth.tsx";
 ---
 <Layout title="直播日历 - A-SOUL Timeline">
-  <CalendarMonth client:load />
+  <!-- client:only: 跳过SSR（SSR会在构建时固化当天日期导致月份文案过期），纯客户端读取真实当前时间 -->
+  <CalendarMonth client:only="solid-js" />
 </Layout>
 
 <style is:global>
