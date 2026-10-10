@@ -239,6 +239,8 @@ export default function CalendarMonth() {
     if (showPicker()) {
       const close = (e: MouseEvent) => {
         const t = e.target as HTMLElement;
+        // 选择器内部点击引发 DOM 重排时，target 可能已脱离文档树（closest 会返回 null 被误判为外部点击）
+        if (t.isConnected === false) return;
         if (!t.closest(".cal-picker") && !t.closest(".cal-nav-title")) {
           setShowPicker(false);
         }
@@ -275,7 +277,8 @@ export default function CalendarMonth() {
 
         {/* 浮动月份/年代选择器 */}
         <Show when={showPicker()}>
-          <div class="cal-picker">
+          {/* 点击选择器内部不触发“点击外部关闭”逻辑 */}
+          <div class="cal-picker" onClick={(e) => e.stopPropagation()}>
             <div class="cal-picker-years">
               <button onClick={() => setPickerYear(pickerYear() - (pickerMode() === "decade" ? 10 : 1))}>&lt;</button>
               <span class="cal-picker-label" onClick={() => setPickerMode(pickerMode() === "month" ? "decade" : "month")}>

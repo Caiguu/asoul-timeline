@@ -51,9 +51,9 @@ import CalendarMonth from "../components/CalendarMonth.tsx";
 .cal-picker {
   position: absolute; top: calc(100% + 6px); left: 50%;
   transform: translateX(-50%); z-index: 30;
-  width: 280px; background: #fff;
+  width: 320px; background: #fff;
   border: 1px solid #eee; border-radius: 12px;
-  padding: 1rem; box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  padding: 1.15rem; box-shadow: 0 8px 30px rgba(0,0,0,0.12);
   animation: cal-picker-pop 0.15s ease;
 }
 @keyframes cal-picker-pop {
@@ -73,11 +73,11 @@ import CalendarMonth from "../components/CalendarMonth.tsx";
 .cal-picker-label:hover { background: #f5f5f5; }
 .cal-picker-label::after { content: " ▾"; font-size: 10px; color: #999; font-weight: 400; }
 .cal-picker-months {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
 }
 .cal-picker-decades { grid-template-columns: repeat(5, 1fr); }
 .cal-pm {
-  padding: 8px 0; border: 1px solid #eee; border-radius: 6px;
+  padding: 11px 0; border: 1px solid #eee; border-radius: 6px;
   background: #fff; cursor: pointer; font-size: 13px; color: #666;
   transition: all 0.15s;
 }
