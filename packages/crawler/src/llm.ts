@@ -53,6 +53,8 @@ export async function ocrScheduleImage(
     },
     body: JSON.stringify({
       model: DOUBAO_MODEL,
+      // seed 2.1 默认开启深度思考，识图推理会卡住数分钟导致整轮超时，必须禁用
+      thinking: { type: "disabled" },
       messages: [
         {
           role: "user",
