@@ -76,20 +76,21 @@ console.log(`[sync-remote] accounts: ${accounts.length} rows`);
 const dynamics = localDb.query("SELECT * FROM dynamics WHERE fetched_at > ?").all(lastSync);
 for (const r of dynamics as any[]) {
   await execWithRetry({
-    sql: "INSERT OR IGNORE INTO dynamics (id, uid, type, bili_type, text, rich_text, raw, images, author_name, author_face, author_url, dynamic_url, video_cover, video_title, forward, reserve, topic, schedule_entries, live_time, live_title, created_at, fetched_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    sql: "INSERT INTO dynamics (id, uid, type, bili_type, text, rich_text, raw, images, author_name, author_face, author_url, dynamic_url, video_cover, video_title, forward, reserve, topic, schedule_entries, live_time, live_title, created_at, fetched_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET text=excluded.text, rich_text=excluded.rich_text, raw=excluded.raw, reserve=excluded.reserve, schedule_entries=excluded.schedule_entries, fetched_at=excluded.fetched_at",
     args: [r.id, r.uid, r.type, r.bili_type, r.text, r.rich_text, r.raw, r.images, r.author_name, r.author_face, r.author_url, r.dynamic_url, r.video_cover, r.video_title, r.forward, r.reserve, r.topic, r.schedule_entries, r.live_time, r.live_title, r.created_at, r.fetched_at],
   });
 }
 totalPushed += dynamics.length;
 console.log(`[sync-remote] dynamics: ${dynamics.length} new rows`);
 
-// live_schedules: 增量（created_at > lastSync）
-const schedules = localDb.query("SELECT * FROM live_schedules WHERE created_at > ?").all(lastSync);
-for (const r of schedules as any[]) {
-  await execWithRetry({
-    sql: "INSERT OR IGNORE INTO live_schedules (id, dynamic_id, uid, rid, title, live_time, status, created_at, live_type, participants, live_room_url, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+// 日程数量很小：全量 upsert，确保取消、裁决、标题/时间修改也能覆盖旧记录。
+const schedules = localDb.query("SELECT * FROM live_schedules").all();
+const scheduleStatements = (schedules as any[]).map(r => ({
+    sql: "INSERT INTO live_schedules (id, dynamic_id, uid, rid, title, live_time, status, created_at, live_type, participants, live_room_url, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(rid) DO UPDATE SET dynamic_id=excluded.dynamic_id, uid=excluded.uid, title=excluded.title, live_time=excluded.live_time, status=excluded.status, live_type=excluded.live_type, participants=excluded.participants, live_room_url=excluded.live_room_url, source=excluded.source",
     args: [r.id, r.dynamic_id, r.uid, r.rid, r.title, r.live_time, r.status, r.created_at, r.live_type, r.participants, r.live_room_url, r.source],
-  });
+  }));
+for (let offset = 0; offset < scheduleStatements.length; offset += 100) {
+  await turso.batch(scheduleStatements.slice(offset, offset + 100), "write");
 }
 totalPushed += schedules.length;
 console.log(`[sync-remote] live_schedules: ${schedules.length} new rows`);

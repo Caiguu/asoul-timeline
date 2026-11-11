@@ -241,6 +241,35 @@ function parseDynamic(it: any): RawDynamic {
 
 const MAX_RETRIES = 3;
 
+// 不依赖最新一页动态：逐条核验尚未开播的预约原动态。
+// 网络错误、权限限制和未知返回都不能作为“已取消”的依据。
+export async function fetchDynamicDetail(id: string): Promise<any | null> {
+  const url = `https://api.bilibili.com/x/polymer/web-dynamic/v1/detail?id=${encodeURIComponent(id)}`;
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": UA, Referer: "https://t.bilibili.com/" },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.code === 0 && data.data?.item) return data.data.item;
+    }
+    const b = await getBrowser();
+    const page = await b.newPage({ userAgent: UA });
+    try {
+      await page.goto("https://www.bilibili.com", { waitUntil: "domcontentloaded", timeout: 15000 });
+      return await page.evaluate(async (url) => {
+        const res = await fetch(url, { signal: AbortSignal.timeout(10000), credentials: "include" });
+        const data = await res.json();
+        return data.code === 0 ? data.data?.item ?? null : null;
+      }, url);
+    } finally { await page.close(); }
+  } catch (e) {
+    console.warn(`[reconcile] 预约 ${id} 核验失败，保留原状态: ${String(e)}`);
+    return null;
+  }
+}
+
 export async function fetchDynamics(uid: number): Promise<RawDynamic[]> {
   const b = await getBrowser();
   const weekAgo = Date.now() - ONE_WEEK_MS;

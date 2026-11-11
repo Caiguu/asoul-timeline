@@ -1,12 +1,28 @@
 // 共享路由创建函数，兼容本地 bun:sqlite 和远程 libsql (Turso)
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { eq, desc, and, gte, gt, lt } from "drizzle-orm";
+import { eq, ne, desc, and, gte, gt, lt } from "drizzle-orm";
 import { accounts, dynamics, liveSchedules } from "@asoul-timeline/db";
 import { getLiveStatus } from "./live-status";
 
 export function createApp(db: any) {
   const app = new Hono();
+  // 同场取消可能同时命中预约与日程表，保留一份取消展示。
+  function visibleSchedules(rows: any[]) {
+    return rows.filter(s => s.status !== "superseded").filter((s, index, all) =>
+      s.status !== "cancelled" || !all.slice(0, index).some(other =>
+        other.status === "cancelled" && other.liveTime === s.liveTime
+        && (other.participants ?? [{ uid: other.uid }]).some((p: any) =>
+          (s.participants ?? [{ uid: s.uid }]).some((q: any) => q.uid === p.uid))));
+  }
+  async function timelineItems(rows: any[]) {
+    const schedules = visibleSchedules(await db.select().from(liveSchedules).all());
+    return rows.map(({ raw, ...item }) => ({ ...item,
+      resolvedSchedules: schedules.filter((s: any) => s.dynamicId === item.id && s.status !== "superseded")
+        .map((s: any) => ({ title: s.title, liveTime: s.liveTime, liveType: s.liveType,
+          participants: s.participants ?? [], liveRoomUrl: s.liveRoomUrl, status: s.status })),
+    }));
+  }
 
   app.use("/api/*", cors());
   app.use("/api/*", async (c, next) => {
@@ -36,7 +52,7 @@ export function createApp(db: any) {
       .limit(limit)
       .all();
 
-    const items = (rows as any[]).map(({ raw, ...rest }: any) => rest);
+    const items = await timelineItems(rows);
 
     const nextCursor =
       items.length === limit && items.length > 0
@@ -72,7 +88,7 @@ app.get("/api/dynamics/recent", async (c) => {
       .limit(limit)
       .all();
 
-    const items = (rows as any[]).map(({ raw, ...rest }: any) => rest);
+    const items = await timelineItems(rows);
     const latest = items.length > 0 ? items[0].createdAt : since > 0 ? since : Date.now();
 
     return c.json({
@@ -124,11 +140,11 @@ app.get("/api/dynamics/recent", async (c) => {
       .select(scheduleFields)
       .from(liveSchedules)
       .leftJoin(dynamics, eq(liveSchedules.dynamicId, dynamics.id))
-      .where(and(gte(liveSchedules.liveTime, start), lt(liveSchedules.liveTime, end)))
+      .where(and(ne(liveSchedules.status, "superseded"), gte(liveSchedules.liveTime, start), lt(liveSchedules.liveTime, end)))
       .orderBy(liveSchedules.liveTime)
       .all();
 
-    return c.json({ schedules });
+    return c.json({ schedules: visibleSchedules(schedules) });
   });
 
   app.get("/api/calendar/upcoming", async (c) => {
@@ -140,11 +156,11 @@ app.get("/api/dynamics/recent", async (c) => {
       .select(scheduleFields)
       .from(liveSchedules)
       .leftJoin(dynamics, eq(liveSchedules.dynamicId, dynamics.id))
-      .where(and(gte(liveSchedules.liveTime, todayStart), lt(liveSchedules.liveTime, weekLater)))
+      .where(and(ne(liveSchedules.status, "superseded"), gte(liveSchedules.liveTime, todayStart), lt(liveSchedules.liveTime, weekLater)))
       .orderBy(liveSchedules.liveTime)
       .all();
 
-    return c.json({ schedules });
+    return c.json({ schedules: visibleSchedules(schedules) });
   });
 
   app.get("/api/calendar/ics", async (c) => {
@@ -156,7 +172,7 @@ app.get("/api/dynamics/recent", async (c) => {
       .select(scheduleFields)
       .from(liveSchedules)
       .leftJoin(dynamics, eq(liveSchedules.dynamicId, dynamics.id))
-      .where(and(gte(liveSchedules.liveTime, threeMonthsAgo), lt(liveSchedules.liveTime, yearLater)))
+      .where(and(ne(liveSchedules.status, "superseded"), gte(liveSchedules.liveTime, threeMonthsAgo), lt(liveSchedules.liveTime, yearLater)))
       .orderBy(liveSchedules.liveTime)
       .all();
 
@@ -170,7 +186,7 @@ app.get("/api/dynamics/recent", async (c) => {
       "X-WR-CALDESC:A-SOUL女团直播日程 - 自动生成",
     ];
 
-    for (const s of rows as any[]) {
+    for (const s of visibleSchedules(rows)) {
       const start = new Date(s.liveTime);
       const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
 
@@ -197,6 +213,7 @@ app.get("/api/dynamics/recent", async (c) => {
         `DESCRIPTION:${desc}`,
       ];
       if (url) vevent.push(`URL:${url}`);
+      if (s.status === "cancelled") vevent.push("STATUS:CANCELLED");
       vevent.push(`UID:${s.rid}@asoul-timeline`);
       vevent.push("END:VEVENT");
       lines.push(...vevent);
@@ -216,7 +233,7 @@ app.get("/api/dynamics/recent", async (c) => {
     const id = c.req.param("id");
     const item = await db.select().from(dynamics).where(eq(dynamics.id, id)).get();
     if (!item) return c.json({ error: "not found" }, 404);
-    return c.json({ item });
+    return c.json({ item: (await timelineItems([item]))[0] });
   });
 app.get("/api/live-status", async (c) => {
     const members = await getLiveStatus(db);

@@ -4,6 +4,7 @@ import type { RichTextNode } from "@asoul-timeline/shared";
 import type { ReserveInfo, LiveType, ScheduleParticipant } from "@asoul-timeline/shared";
 
 export interface ScheduleEntryInfo {
+  status?: import("@asoul-timeline/shared").LiveStatus;
   title: string;
   liveTime: number;
   liveType: LiveType | null;
@@ -59,7 +60,7 @@ export const liveSchedules = sqliteTable("live_schedules", {
   title: text("title").notNull(),
   liveTime: integer("live_time").notNull(),
   status: text("status", {
-    enum: ["upcoming", "live", "ended"],
+    enum: ["upcoming", "live", "ended", "cancelled", "superseded"],
   }).notNull(),
   createdAt: integer("created_at").notNull(),
   liveType: text("live_type", { enum: ["single", "dual", "group"] }),

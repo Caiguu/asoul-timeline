@@ -7,6 +7,7 @@ import { createDb } from "@asoul-timeline/db/local";
 import { findMember, findMembers, roomUrlForMember, type MemberInfo } from "./members";
 import type { ScheduleParticipant } from "@asoul-timeline/shared";
 import type { ClassifyResult } from "./types";
+import { reconcileSchedules } from "./reconcile";
 
 const OFFICIAL_UID = 703007996;
 
@@ -229,6 +230,7 @@ async function run(dry: boolean) {
     }
   }
 
+  if (!dry) await reconcileSchedules();
   console.log("[crawler] done");
 }
 

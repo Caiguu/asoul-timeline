@@ -133,7 +133,7 @@ function ScheduleItem(props: { s: LiveSchedule }) {
             <span class={`sced-type sced-type-${props.s.liveType}`}>{LIVE_TYPE_LABELS[props.s.liveType!]}</span>
           </Show>
         </div>
-        <div class="sced-title">{title()}</div>
+        <div class="sced-title"><span style={{ "text-decoration": props.s.status === "cancelled" ? "line-through" : undefined }}>{title()}</span>{props.s.status === "cancelled" ? "（已取消）" : ""}</div>
         <Participants s={props.s} />
       </div>
     </a>
@@ -334,7 +334,8 @@ export default function CalendarMonth() {
         <For each={grid()}>
           {(cell) => {
             const isToday = cell.date.toDateString() === now.toDateString();
-            const uids = [...new Set(cell.schedules.map((s) => primaryUid(s)))];
+            const activeSchedules = cell.schedules.filter(s => s.status !== "cancelled");
+            const uids = [...new Set(activeSchedules.map((s) => primaryUid(s)))];
             return (
               <div
                 class="cal-cell"
@@ -356,7 +357,7 @@ export default function CalendarMonth() {
                 }}
               >
                 <span class="cal-date">{cell.date.getDate()}</span>
-                <Show when={cell.schedules.length > 0}>
+                <Show when={activeSchedules.length > 0}>
                   <div class="cal-dots">
                     <For each={uids.slice(0, 4)}>
                       {(uid) => <span class="cal-dot" style={{ background: colorForUid(uid) }} />}
@@ -374,7 +375,7 @@ export default function CalendarMonth() {
         <div class="cal-day-view">
           <div class="cal-section-title">
             {selectedDate()!.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
-            <span class="cal-section-count">{selectedDaySchedules().length}场直播</span>
+            <span class="cal-section-count">{selectedDaySchedules().filter(s => s.status !== "cancelled").length}场直播</span>
           </div>
           <Show when={selectedDaySchedules().length > 0} fallback={<p class="cal-empty">当天暂无直播</p>}>
             <div class="sced-list">
@@ -390,7 +391,7 @@ export default function CalendarMonth() {
       <div class="cal-upcoming">
         <div class="cal-section-title">
           近期直播
-          <span class="cal-section-count">{upcoming().length}场</span>
+          <span class="cal-section-count">{upcoming().filter(s => s.status !== "cancelled").length}场</span>
         </div>
         <Show when={upcoming().length > 0} fallback={<p class="cal-empty">近期暂无直播安排</p>}>
           <div class="sced-list">

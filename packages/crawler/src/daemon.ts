@@ -5,7 +5,7 @@ const PKG_DIR = resolve(import.meta.dir, "..");
 const REPO_ROOT = resolve(import.meta.dir, "../../..");
 const ENV_FILE = resolve(REPO_ROOT, ".env");
 const TICK_INTERVAL = 30 * 60 * 1000; // 30 分钟
-const CRAWL_TIMEOUT = 3 * 60 * 1000; // 3 分钟超时
+const CRAWL_TIMEOUT = 10 * 60 * 1000; // 包含逐条预约核验与 AI 裁决
 
 // 清理残留进程：chromium + crawl 子进程
 async function killStaleProcesses() {
@@ -54,6 +54,7 @@ async function tick() {
     if (r.code === 0) {
       const captures = r.out.match(/\[bili\] \d+ got \d+ items, \d+ within last week/g);
       if (captures) console.log(captures.map((c) => "  " + c).join("\n"));
+      for (const line of `${r.out}\n${r.err}`.split("\n").filter(l => l.includes("[reconcile]"))) console.log(line);
 
       // 3. 同步到远程
       console.log(`[${new Date().toLocaleString("zh-CN")}] crawl ok, syncing...`);

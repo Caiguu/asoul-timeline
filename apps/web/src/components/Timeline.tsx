@@ -51,6 +51,7 @@ function LivePreviewCard(props: {
   href: string;
   liveType?: string | null;
   group?: boolean;
+  cancelled?: boolean;
 }) {
   const color = () => themeColorForParticipants(props.participants);
   return (
@@ -64,7 +65,7 @@ function LivePreviewCard(props: {
     >
       <div class="lpc-label">直播预告</div>
       <div class="lpc-body">
-        <div class="lpc-title">{props.title}</div>
+        <div class="lpc-title"><span style={{ "text-decoration": props.cancelled ? "line-through" : undefined }}>{props.title}</span>{props.cancelled ? "（已取消）" : ""}</div>
         <div class="lpc-desc">
           <span class="lpc-time">{props.timeText}</span>
           <Show when={props.liveType}>
@@ -173,7 +174,7 @@ export default function Timeline() {
                   </span>
                 </div>
 
-                <Show when={item.reserve}>
+                <Show when={item.resolvedSchedules === undefined && item.reserve}>
                   {(rsv: ReserveInfo) => (
                     <LivePreviewCard
                       participants={[{ uid: item.uid, name: item.authorName, face: item.authorFace }]}
@@ -184,9 +185,9 @@ export default function Timeline() {
                   )}
                 </Show>
 
-                <Show when={item.scheduleEntries && item.scheduleEntries.length > 0}>
+                <Show when={(item.resolvedSchedules ?? item.scheduleEntries)?.length}>
                   <div class="schedule-list">
-                    <For each={item.scheduleEntries}>
+                    <For each={item.resolvedSchedules ?? item.scheduleEntries}>
                       {(entry: ScheduleEntryInfo) => (
                         <LivePreviewCard
                           participants={entry.participants}
@@ -195,6 +196,7 @@ export default function Timeline() {
                           href={item.dynamicUrl}
                           liveType={entry.liveType}
                           group={entry.liveType === "group"}
+                          cancelled={entry.status === "cancelled"}
                         />
                       )}
                     </For>

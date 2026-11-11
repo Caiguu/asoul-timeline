@@ -1,6 +1,6 @@
 export type DynamicType = "normal" | "live_reserve" | "live_notice";
 
-export type LiveStatus = "upcoming" | "live" | "ended";
+export type LiveStatus = "upcoming" | "live" | "ended" | "cancelled" | "superseded";
 
 export interface RichTextNode {
   type: "text" | "emoji" | "at" | "web" | "topic";
@@ -64,6 +64,7 @@ export interface Dynamic {
   liveTitle: string | null;
   createdAt: number;
   fetchedAt: number;
+  resolvedSchedules?: ScheduleEntryInfo[];
 }
 
 export type LiveType = "single" | "dual" | "group";
@@ -75,6 +76,7 @@ export interface ScheduleParticipant {
 }
 
 export interface ScheduleEntryInfo {
+  status?: LiveStatus;
   title: string;
   liveTime: number;
   liveType: LiveType | null;

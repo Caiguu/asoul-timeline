@@ -1,4 +1,4 @@
-import { eq, and, gte, lt } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { dynamics, liveSchedules, accounts } from "@asoul-timeline/db";
 import { createDb } from "@asoul-timeline/db/local";
 import type { ScheduleParticipant } from "@asoul-timeline/shared";
@@ -41,20 +41,14 @@ export async function saveDynamic(
       createdAt: raw.createdAt,
       fetchedAt: Date.now(),
     })
-    .onConflictDoNothing()
+    .onConflictDoUpdate({ target: dynamics.id, set: {
+      raw: raw.raw, reserve: raw.reserve, text: result.text, richText: raw.richText,
+      fetchedAt: Date.now(),
+      ...(raw.scheduleEntries?.length ? { scheduleEntries: raw.scheduleEntries } : {}),
+    } })
     .run();
 
   if (result.liveTime && raw.reserve) {
-    // 日程表优先：如果同时间已有 schedule 条目，跳过 reserve 插入
-    const existing = db.select({ id: liveSchedules.id })
-      .from(liveSchedules)
-      .where(and(
-        eq(liveSchedules.liveTime, result.liveTime),
-        eq(liveSchedules.source, "schedule"),
-      ))
-      .get();
-
-    if (!existing) {
       db.insert(liveSchedules)
         .values({
           dynamicId: raw.id,
@@ -69,9 +63,10 @@ export async function saveDynamic(
           liveRoomUrl: roomUrlForUid(raw.uid),
           source: "reserve",
         })
-        .onConflictDoNothing({ target: liveSchedules.rid })
+        .onConflictDoUpdate({ target: liveSchedules.rid, set: {
+          title: result.liveTitle ?? "直播", liveTime: result.liveTime,
+        } })
         .run();
-    }
   }
 }
 
@@ -87,18 +82,6 @@ export interface ScheduleEntry {
 }
 
 export async function saveScheduleEntries(entries: ScheduleEntry[]): Promise<void> {
-  // 日程表优先：先删除与日程条目时间冲突的 reserve 条目
-  for (const entry of entries) {
-    db.delete(liveSchedules)
-      .where(
-        and(
-          eq(liveSchedules.liveTime, entry.liveTime),
-          eq(liveSchedules.source, "reserve"),
-        ),
-      )
-      .run();
-  }
-
   for (const entry of entries) {
     // 用 rid 去重，日程表条目用 rid = -hash(liveTime+title) 保持唯一
     db.insert(liveSchedules)
