@@ -1,11 +1,27 @@
 import { describe, expect, test } from "bun:test";
-import { overlaps, validSelection, type Candidate } from "./reconcile";
+import { comparisonCandidates, overlaps, validSelection, type Candidate } from "./reconcile";
 
 const make = (id: number, uids: number[], liveTime = 1000): Candidate => ({
   id, uid: uids[0], participants: uids.map(uid => ({ uid })), liveTime, liveType: uids.length === 1 ? "single" : "dual",
 });
 
 describe("成员与时刻冲突约束", () => {
+  test("历史落选项永不参选，新候选只与当前最优比较", () => {
+    const history = { ...make(1, [1]), status: "superseded" };
+    const best = { ...make(2, [1]), status: "upcoming" };
+    const incoming = { ...make(3, [1]), status: "upcoming" };
+    expect(comparisonCandidates([history, best]).map(s => s.id)).toEqual([2]);
+    const candidates = comparisonCandidates([history, best, incoming]);
+    expect(candidates.map(s => s.id)).toEqual([2, 3]);
+    expect(validSelection(candidates, [1])).toBe(false);
+    expect(validSelection(candidates, [3])).toBe(true);
+  });
+  test("当前最优取消、结束或改期都不会复活历史落选项", () => {
+    const history = { ...make(1, [1]), status: "superseded" };
+    expect(comparisonCandidates([history, { ...make(2, [1]), status: "cancelled" }])).toEqual([]);
+    expect(comparisonCandidates([history, { ...make(2, [1]), status: "ended" }]).map(s => s.id)).toEqual([2]);
+    expect(comparisonCandidates([history, { ...make(2, [1], 2000), status: "upcoming" }]).map(s => s.id)).toEqual([2]);
+  });
   test("同时间不同成员单播互不冲突", () => {
     expect(overlaps(make(1, [1]), make(2, [2]))).toBe(false);
     expect(validSelection([make(1, [1]), make(2, [2])], [1, 2])).toBe(true);

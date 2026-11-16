@@ -44,7 +44,7 @@ import Layout from "../layouts/Layout.astro";
       <li>前端：Astro + SolidJS，部署在 Cloudflare Pages</li>
       <li>API：Hono，部署在 Cloudflare Workers</li>
       <li>数据库：Turso（Edge SQLite）</li>
-      <li>AI 模型：豆包 Seed 2.1（多模态：动态分类 + 日程表识图）</li>
+      <li>AI 模型：gpt-6.1-terra（日程表识图、直播冲突裁决与取消判断）</li>
     </ul>
   </section>
 
@@ -58,6 +58,11 @@ import Layout from "../layouts/Layout.astro";
   <section class="about-section">
     <h2>更新日志</h2>
     <ul class="about-list">
+      <li>
+        <strong>2026-11-17</strong>
+        <p>AI 服务切换至 OpenAI 兼容接口，使用<strong>gpt-6.1-terra</strong>完成日程表识图、直播冲突裁决与取消判断；已通过最新一周日程表的真实图片验证。</p>
+        <p>优化历史冲突处理：当前已选条目视为最优结果，新冲突仅与当前展示候选比较；历史落选记录保留但不展示、不再参与后续比对，也不自动恢复。</p>
+      </li>
       <li>
         <strong>2026-11-11</strong>
         <p>新增<strong>直播日程智能去重</strong>：同一时刻，同一成员只展示一场直播；日程表与直播预约发生冲突时，由 AI 结合标题完整程度、动态正文及主题变更通知选择合适的条目，不同成员同时进行的单播仍分别保留。</p>

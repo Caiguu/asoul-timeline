@@ -72,7 +72,7 @@ function toParticipants(members: MemberInfo[]): ScheduleParticipant[] {
 async function processScheduleDynamic(
   raw: { id: string; uid: number; text: string; images: string[]; createdAt: number; dynamicUrl: string; authorName: string; authorFace: string | null },
 ): Promise<ScheduleEntry[]> {
-  console.log(`[crawler] 日程表动态 ${raw.id}, 调用豆包OCR...`);
+  console.log(`[crawler] 日程表动态 ${raw.id}, 调用AI OCR...`);
   const items = await ocrScheduleImage(raw.images[0]);
   if (items.length === 0) {
     console.log(`[crawler] OCR 未识别到条目`);

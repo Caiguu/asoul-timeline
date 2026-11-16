@@ -21,6 +21,11 @@ export function overlaps(a: Candidate, b: Candidate): boolean {
   return a.liveTime === b.liveTime && memberUids(a).some(uid => memberUids(b).includes(uid));
 }
 
+// 落选项永久归档，不因当前最优取消或改期而自动重新参选。
+export function comparisonCandidates<T extends { status: string }>(rows: T[]): T[] {
+  return rows.filter(s => s.status !== "cancelled" && s.status !== "superseded");
+}
+
 const beijingTime = (time: number) => new Date(time).toLocaleString("sv-SE", { timeZone: "Asia/Shanghai" });
 
 // 校验模型输出：同一个成员同一时刻只能保留一条，且不能丢掉不冲突的直播。
@@ -62,14 +67,14 @@ export async function reconcileSchedules(options: { checkReservations?: boolean 
   const cancel = (ids: number[], reason: string) => {
     const all = db.select().from(liveSchedules).all();
     const targets = all.filter(s => ids.includes(s.id));
-    for (const s of all.filter(s => targets.some(t => t.id === s.id || overlaps(t, s)))) {
+    for (const s of comparisonCandidates(all).filter(s => targets.some(t => t.id === s.id || overlaps(t, s)))) {
       db.update(liveSchedules).set({ status: "cancelled" }).where(eq(liveSchedules.id, s.id)).run();
     }
     if (ids.length) console.log(`[reconcile] 已取消 ${ids.join(",")}: ${reason}`);
   };
 
   if (options.checkReservations !== false) {
-    const future = db.select().from(liveSchedules).all().filter(s => s.source === "reserve" && s.liveTime > now && s.status !== "cancelled");
+    const future = comparisonCandidates(db.select().from(liveSchedules).all()).filter(s => s.source === "reserve" && s.liveTime > now);
     for (const id of new Set(future.map(s => s.dynamicId))) {
       const item = await fetchDynamicDetail(id);
       if (!item) continue;
@@ -92,8 +97,8 @@ export async function reconcileSchedules(options: { checkReservations?: boolean 
 
   // 不仅检查最新列表：从持久化的动态中找“取消”公告，可重试失败的 AI 调用。
   for (const post of posts.filter(p => p.text.includes("取消"))) {
-    const candidates = db.select().from(liveSchedules).all().filter(s =>
-      s.status !== "cancelled" && s.liveTime >= post.createdAt && s.liveTime <= post.createdAt + 31 * 86400000
+    const candidates = comparisonCandidates(db.select().from(liveSchedules).all()).filter(s =>
+      s.liveTime >= post.createdAt && s.liveTime <= post.createdAt + 31 * 86400000
       && (post.uid === 703007996 || memberUids(s).includes(post.uid)));
     if (!candidates.length) continue;
     try {
@@ -107,7 +112,9 @@ export async function reconcileSchedules(options: { checkReservations?: boolean 
     } catch (e) { console.warn(`[reconcile] 取消公告裁决失败 ${post.id}: ${e}`); }
   }
 
-  const rows = db.select().from(liveSchedules).all().filter(s => s.status !== "cancelled");
+  // 已选条目默认是当前最优；只有新增的有效候选与其冲突时才再次裁决。
+  // superseded 永不进入证据或缓存指纹，历史落选项不会被反复比较。
+  const rows = comparisonCandidates(db.select().from(liveSchedules).all());
   const times = new Set(rows.map(s => s.liveTime));
   for (const time of times) {
     const group = rows.filter(s => s.liveTime === time);
@@ -129,13 +136,6 @@ export async function reconcileSchedules(options: { checkReservations?: boolean 
       }).where(eq(liveSchedules.id, s.id)).run();
       console.log(`[reconcile] ${new Date(time).toISOString()} 保留 ${result.keepIds}: ${result.reason}`);
     } catch (e) { console.warn(`[reconcile] 冲突裁决失败，留待重试: ${e}`); }
-  }
-  // 取消或时间变更后，以前被覆盖的候选不应永久消失。
-  const final = db.select().from(liveSchedules).all();
-  for (const s of final.filter(s => s.status === "superseded")) {
-    if (!final.some(other => other.id !== s.id && other.status !== "cancelled" && other.status !== "superseded" && overlaps(s, other))) {
-      db.update(liveSchedules).set({ status: s.liveTime > now ? "upcoming" : "ended" }).where(eq(liveSchedules.id, s.id)).run();
-    }
   }
 }
 
