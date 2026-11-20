@@ -120,11 +120,11 @@ function Participants(props: { s: LiveSchedule }) {
 
 function ScheduleItem(props: { s: LiveSchedule }) {
   const title = () => props.s.title.replace(/^直播预约：/, "");
-  const dotColor = () => colorForUid(primaryUid(props.s));
+  const dotColor = () => props.s.status === "cancelled" ? "#222" : colorForUid(primaryUid(props.s));
   const link = () => props.s.liveRoomUrl ?? props.s.dynamicUrl ?? "#";
 
   return (
-    <a href={link()} target="_blank" class="sced-item" style={{ "--dot-color": dotColor() }}>
+    <a href={link()} target="_blank" class="sced-item" classList={{ "sced-cancelled": props.s.status === "cancelled" }} style={{ "--dot-color": dotColor() }}>
       <div class="sced-dot" style={{ "--dot-color": dotColor() }} />
       <div class="sced-body">
         <div class="sced-time-row">

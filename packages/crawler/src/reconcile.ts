@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { judgeSchedule } from "./llm";
 import { fetchDynamicDetail } from "./bilibili";
 import { MEMBER_MAP } from "./members";
+import { processScheduleNotices } from "./notices";
 
 export type Candidate = {
   id: number; uid: number; liveTime: number; liveType: string | null;
@@ -72,6 +73,8 @@ export async function reconcileSchedules(options: { checkReservations?: boolean 
     }
     if (ids.length) console.log(`[reconcile] 已取消 ${ids.join(",")}: ${reason}`);
   };
+
+  await processScheduleNotices();
 
   if (options.checkReservations !== false) {
     const future = comparisonCandidates(db.select().from(liveSchedules).all()).filter(s => s.source === "reserve" && s.liveTime > now);

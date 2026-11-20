@@ -4,6 +4,7 @@ export {
   dynamics,
   liveSchedules,
   liveStatus,
+  scheduleNotices,
 } from "./schema";
 export type {
   ForwardInfo,

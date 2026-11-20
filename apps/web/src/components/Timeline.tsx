@@ -52,6 +52,8 @@ function LivePreviewCard(props: {
   liveType?: string | null;
   group?: boolean;
   cancelled?: boolean;
+  obsolete?: boolean;
+  hideLabel?: boolean;
 }) {
   const color = () => themeColorForParticipants(props.participants);
   return (
@@ -60,12 +62,12 @@ function LivePreviewCard(props: {
       target="_blank"
       class="live-preview-card"
       onClick={(e) => e.stopPropagation()}
-      classList={{ "lpc-group": props.group }}
-      style={{ "--theme-color": color() }}
+      classList={{ "lpc-group": props.group, "lpc-cancelled": props.cancelled }}
+      style={{ "--theme-color": props.cancelled ? "#333" : props.obsolete ? "#888" : color(), background: props.cancelled || props.obsolete ? "#ededed" : undefined }}
     >
-      <div class="lpc-label">直播预告</div>
+      <Show when={!props.hideLabel}><div class="lpc-label">{props.cancelled ? "直播取消" : "直播预告"}</div></Show>
       <div class="lpc-body">
-        <div class="lpc-title"><span style={{ "text-decoration": props.cancelled ? "line-through" : undefined }}>{props.title}</span>{props.cancelled ? "（已取消）" : ""}</div>
+        <div class="lpc-title"><span style={{ "text-decoration": props.cancelled || props.obsolete ? "line-through" : undefined }}>{props.title}</span>{props.cancelled ? "（已取消）" : ""}</div>
         <div class="lpc-desc">
           <span class="lpc-time">{props.timeText}</span>
           <Show when={props.liveType}>
@@ -174,6 +176,27 @@ export default function Timeline() {
                   </span>
                 </div>
 
+                <Show when={item.scheduleNotice}>
+                  {(notice) => (
+                    <div class="live-preview-card" classList={{ "lpc-cancelled": notice().kind === "cancel" }} style={{ "--theme-color": notice().kind === "cancel" ? "#333" : "#FC966E", background: notice().kind === "cancel" ? "#ededed" : "#fff7f2" }}>
+                      <div class="lpc-label">{notice().kind === "cancel" ? "直播取消" : "直播变更"}</div>
+                      <div class="lpc-body notice-comparison">
+                        <For each={notice().entries}>{(entry, index) => (
+                          <div class="notice-pair">
+                            <LivePreviewCard participants={entry.participants} title={entry.title}
+                              timeText={new Date(entry.liveTime).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                              href={entry.liveRoomUrl ?? item.dynamicUrl} liveType={entry.liveType} hideLabel cancelled={entry.status === "cancelled"} />
+                            <Show when={notice().kind === "change" && notice().beforeEntries?.[index()]}>
+                              {before => <LivePreviewCard participants={before().participants} title={before().title}
+                                timeText={new Date(before().liveTime).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                                href={before().liveRoomUrl ?? item.dynamicUrl} liveType={before().liveType} hideLabel obsolete />}
+                            </Show>
+                          </div>
+                        )}</For>
+                      </div>
+                    </div>
+                  )}
+                </Show>
                 <Show when={item.resolvedSchedules === undefined && item.reserve}>
                   {(rsv: ReserveInfo) => (
                     <LivePreviewCard

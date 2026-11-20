@@ -130,6 +130,12 @@ import Timeline from "../components/Timeline.tsx";
   white-space: nowrap; min-width: 44px;
 }
 .lpc-body { flex: 1; min-width: 0; }
+.notice-comparison .live-preview-card { margin: 0; }
+.notice-pair { display: flex; flex-direction: column; gap: 4px; }
+.notice-pair + .notice-pair { margin-top: 8px; }
+.lpc-cancelled .lpc-title, .lpc-cancelled .lpc-time, .lpc-cancelled .lpc-name { color: #666; }
+.lpc-cancelled .lpc-type { background: #d8d8d8; color: #555; }
+.lpc-cancelled .lpc-avatar { filter: grayscale(1); }
 .lpc-title {
   font-size: 13px; font-weight: 600; color: #333;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

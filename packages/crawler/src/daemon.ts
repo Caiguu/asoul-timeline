@@ -54,7 +54,7 @@ async function tick() {
     if (r.code === 0) {
       const captures = r.out.match(/\[bili\] \d+ got \d+ items, \d+ within last week/g);
       if (captures) console.log(captures.map((c) => "  " + c).join("\n"));
-      for (const line of `${r.out}\n${r.err}`.split("\n").filter(l => l.includes("[reconcile]"))) console.log(line);
+      for (const line of `${r.out}\n${r.err}`.split("\n").filter(l => l.includes("[reconcile]") || l.includes("[notice]"))) console.log(line);
 
       // 3. 同步到远程
       console.log(`[${new Date().toLocaleString("zh-CN")}] crawl ok, syncing...`);

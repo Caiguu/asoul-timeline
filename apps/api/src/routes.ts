@@ -2,7 +2,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { eq, ne, desc, and, gte, gt, lt } from "drizzle-orm";
-import { accounts, dynamics, liveSchedules } from "@asoul-timeline/db";
+import { accounts, dynamics, liveSchedules, scheduleNotices } from "@asoul-timeline/db";
 import { getLiveStatus } from "./live-status";
 
 export function createApp(db: any) {
@@ -17,7 +17,9 @@ export function createApp(db: any) {
   }
   async function timelineItems(rows: any[]) {
     const schedules = visibleSchedules(await db.select().from(liveSchedules).all());
+    const notices = await db.select().from(scheduleNotices).all();
     return rows.map(({ raw, ...item }) => ({ ...item,
+      scheduleNotice: notices.find((n: any) => n.dynamicId === item.id)?.payload ?? null,
       resolvedSchedules: schedules.filter((s: any) => s.dynamicId === item.id && s.status !== "superseded")
         .map((s: any) => ({ title: s.title, liveTime: s.liveTime, liveType: s.liveType,
           participants: s.participants ?? [], liveRoomUrl: s.liveRoomUrl, status: s.status })),

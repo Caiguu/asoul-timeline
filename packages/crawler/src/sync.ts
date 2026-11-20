@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { dynamics, liveSchedules, accounts } from "@asoul-timeline/db";
+import { dynamics, liveSchedules, accounts, scheduleNotices } from "@asoul-timeline/db";
 import { createDb } from "@asoul-timeline/db/local";
 import type { ScheduleParticipant } from "@asoul-timeline/shared";
 import type { RawDynamic, ClassifyResult } from "./types";
@@ -49,6 +49,8 @@ export async function saveDynamic(
     .run();
 
   if (result.liveTime && raw.reserve) {
+    const old = db.select().from(liveSchedules).where(eq(liveSchedules.rid, raw.reserve.rid)).get();
+    if (old && db.select().from(scheduleNotices).all().some(n => n.payload?.scheduleIds?.includes(old.id))) return;
       db.insert(liveSchedules)
         .values({
           dynamicId: raw.id,

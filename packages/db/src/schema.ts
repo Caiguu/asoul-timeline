@@ -79,3 +79,12 @@ export const liveStatus = sqliteTable("live_status", {
   roomId: integer("room_id").notNull().default(0),
   updatedAt: integer("updated_at").notNull().default(0),
 });
+
+export const scheduleNotices = sqliteTable("schedule_notices", {
+  dynamicId: text("dynamic_id").primaryKey(),
+  fingerprint: text("fingerprint").notNull(),
+  payload: text("payload", { mode: "json" }).$type<{
+    kind: "change" | "cancel"; summary: string; entries: ScheduleEntryInfo[]; beforeEntries?: ScheduleEntryInfo[]; scheduleIds?: number[];
+  } | null>(),
+  updatedAt: integer("updated_at").notNull(),
+});

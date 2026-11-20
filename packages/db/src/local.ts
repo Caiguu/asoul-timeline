@@ -12,6 +12,9 @@ export function createDb(dbPath: string = getDbPath()) {
   sqlite.run(`CREATE TABLE IF NOT EXISTS schedule_decisions (
     key TEXT PRIMARY KEY, result TEXT NOT NULL, created_at INTEGER NOT NULL
   )`);
+  sqlite.run(`CREATE TABLE IF NOT EXISTS schedule_notices (
+    dynamic_id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, payload TEXT, updated_at INTEGER NOT NULL
+  )`);
   return drizzle(sqlite, { schema });
 }
 

@@ -42,6 +42,7 @@ export interface TopicInfo {
 }
 
 export interface Dynamic {
+  scheduleNotice?: { kind: "change" | "cancel"; summary: string; entries: ScheduleEntryInfo[]; beforeEntries?: ScheduleEntryInfo[] } | null;
   id: string;
   uid: number;
   type: DynamicType;

@@ -54,6 +54,7 @@ for (const sql of [
   `CREATE TABLE IF NOT EXISTS dynamics (id TEXT PRIMARY KEY, uid INTEGER NOT NULL REFERENCES accounts(uid), type TEXT NOT NULL, bili_type TEXT NOT NULL, text TEXT NOT NULL, rich_text TEXT NOT NULL, raw TEXT NOT NULL, images TEXT NOT NULL, author_name TEXT NOT NULL, author_face TEXT, author_url TEXT, dynamic_url TEXT NOT NULL, video_cover TEXT, video_title TEXT, forward TEXT, reserve TEXT, topic TEXT, schedule_entries TEXT, live_time INTEGER, live_title TEXT, created_at INTEGER NOT NULL, fetched_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS live_schedules (id INTEGER PRIMARY KEY AUTOINCREMENT, dynamic_id TEXT NOT NULL REFERENCES dynamics(id), uid INTEGER NOT NULL, rid INTEGER NOT NULL UNIQUE, title TEXT NOT NULL, live_time INTEGER NOT NULL, status TEXT NOT NULL, created_at INTEGER NOT NULL, live_type TEXT, participants TEXT, live_room_url TEXT, source TEXT)`,
   `CREATE TABLE IF NOT EXISTS live_status (uid INTEGER PRIMARY KEY, name TEXT NOT NULL, live_status INTEGER DEFAULT 0, title TEXT DEFAULT '', online INTEGER DEFAULT 0, cover TEXT DEFAULT '', room_id INTEGER DEFAULT 0, updated_at INTEGER DEFAULT 0)`,
+  `CREATE TABLE IF NOT EXISTS schedule_notices (dynamic_id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, payload TEXT, updated_at INTEGER NOT NULL)`,
 ]) {
   await execWithRetry({ sql });
 }
@@ -106,5 +107,12 @@ for (const r of status as any[]) {
 console.log(`[sync-remote] live_status: ${status.length} rows`);
 
 // 记录本次同步时间
+const notices = localDb.query("SELECT * FROM schedule_notices").all() as any[];
+for (let i = 0; i < notices.length; i += 100) {
+  await turso.batch(notices.slice(i, i + 100).map(n => ({
+    sql: "INSERT INTO schedule_notices VALUES (?, ?, ?, ?) ON CONFLICT(dynamic_id) DO UPDATE SET fingerprint=excluded.fingerprint,payload=excluded.payload,updated_at=excluded.updated_at",
+    args: [n.dynamic_id, n.fingerprint, n.payload, n.updated_at],
+  })), "write");
+}
 writeFileSync(SYNC_FILE, String(now));
 console.log(`[sync-remote] 完成 (推送 ${totalPushed} 条新数据)`);
