@@ -120,7 +120,7 @@ function Participants(props: { s: LiveSchedule }) {
 
 function ScheduleItem(props: { s: LiveSchedule }) {
   const title = () => props.s.title.replace(/^直播预约：/, "");
-  const dotColor = () => props.s.status === "cancelled" ? "#222" : colorForUid(primaryUid(props.s));
+  const dotColor = () => colorForUid(primaryUid(props.s));
   const link = () => props.s.liveRoomUrl ?? props.s.dynamicUrl ?? "#";
 
   return (
@@ -171,7 +171,7 @@ export default function CalendarMonth() {
   }
 
   async function copyICS() {
-    const url = "https://asoul-timeline.pages.dev/calendar/asoul_schedule.ics";
+    const url = "https://timeline.asoul.app/calendar/asoul_schedule.ics";
     try {
       await navigator.clipboard.writeText(url);
     } catch {

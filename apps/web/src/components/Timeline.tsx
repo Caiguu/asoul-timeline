@@ -62,11 +62,11 @@ function LivePreviewCard(props: {
       target="_blank"
       class="live-preview-card"
       onClick={(e) => e.stopPropagation()}
-      classList={{ "lpc-group": props.group, "lpc-cancelled": props.cancelled }}
-      style={{ "--theme-color": props.cancelled ? "#333" : props.obsolete ? "#888" : color(), background: props.cancelled || props.obsolete ? "#ededed" : undefined }}
+      classList={{ "lpc-group": props.group }}
+      style={{ "--theme-color": props.cancelled ? (props.hideLabel ? "#888" : "#FC966E") : props.obsolete ? "#888" : color(), background: props.cancelled ? (props.hideLabel ? "#ededed" : "#fff7f2") : props.obsolete ? "#ededed" : undefined }}
     >
       <Show when={!props.hideLabel}><div class="lpc-label">{props.cancelled ? "直播取消" : "直播预告"}</div></Show>
-      <div class="lpc-body">
+      <div class="lpc-body" style={{ background: props.cancelled ? "#ededed" : undefined, "border-radius": props.cancelled ? "6px" : undefined, padding: props.cancelled && !props.hideLabel ? "0.5rem" : undefined }}>
         <div class="lpc-title"><span style={{ "text-decoration": props.cancelled || props.obsolete ? "line-through" : undefined }}>{props.title}</span>{props.cancelled ? "（已取消）" : ""}</div>
         <div class="lpc-desc">
           <span class="lpc-time">{props.timeText}</span>
@@ -178,7 +178,7 @@ export default function Timeline() {
 
                 <Show when={item.scheduleNotice}>
                   {(notice) => (
-                    <div class="live-preview-card" classList={{ "lpc-cancelled": notice().kind === "cancel" }} style={{ "--theme-color": notice().kind === "cancel" ? "#333" : "#FC966E", background: notice().kind === "cancel" ? "#ededed" : "#fff7f2" }}>
+                    <div class="live-preview-card" style={{ "--theme-color": "#FC966E", background: "#fff7f2" }}>
                       <div class="lpc-label">{notice().kind === "cancel" ? "直播取消" : "直播变更"}</div>
                       <div class="lpc-body notice-comparison">
                         <For each={notice().entries}>{(entry, index) => (
